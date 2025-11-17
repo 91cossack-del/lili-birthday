@@ -1,0 +1,562 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <!-- Обов'язкові налаштування Viewport для адаптивного дизайну (Responsive Web Design) -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>БАГИНЯ - Односторінковий Сайт (SPA)</title>
+
+    <!-- Підключення Tailwind CSS для адаптивності та стилізації -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Підключення Google Fonts: Cinzel Decorative, Crimson Text, Open Sans, Playfair Display, Roboto -->
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@900&family=Crimson+Text:ital,wght@0,400;0,600;0,700;1,400;1,600;1,700;1,900&family=Open+Sans:ital,wght@0,300..800;1,300..800&family=Playfair+Display:ital,wght@0,400..900;1,400..900&family=Roboto:ital,wght@0,100;0,300;0,400;0,500;0,700;0,900;1,100;1,300;1,400;1,500;1,700;1,900&display=swap" rel="stylesheet">
+    
+    <!-- Підключення Tone.js для генерації звукового супроводу або завантаження аудіофайлів -->
+    <script src="https://unpkg.com/tone@14.9.11/build/Tone.js"></script>
+
+    <!-- Налаштування CSS для унікальних ефектів -->
+    <style>
+        /* Встановлення основних шрифтів */
+        body { font-family: 'Open Sans', 'Roboto', sans-serif; }
+
+        /* Стилі для Page 1: Подвійне світло-сіре обрамлення */
+        .page-frame {
+            border: 8px double #D1D5DB; /* light gray (світло-сірий) */
+            box-sizing: border-box;
+            width: 100%;
+            height: 100%;
+        }
+
+        /* Стилі для Page 3: Анімація тексту (пульсація) */
+        @keyframes pulse-fade {
+            0%, 100% { opacity: 0.2; transform: scale(1); }
+            50% { opacity: 1; transform: scale(1.1); }
+        }
+        .text-pulse { animation: pulse-fade 3s ease-in-out infinite; }
+
+        /* Стилі для Page 2: Анімація таймера (блимання) */
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0; }
+        }
+        .timer-blinking { animation: blink 0.5s step-end infinite; }
+
+        /* Стилі для тач-таргетів (кнопок) */
+        .touch-target {
+            min-width: 48px;
+            min-height: 48px;
+            padding: 12px;
+            border-radius: 9999px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            transition: transform 0.2s;
+        }
+        .touch-target:hover {
+            transform: scale(1.05);
+        }
+
+        /* === НОВІ СТИЛІ ДЛЯ КОНФЕТІ ТА ПОДАРУНКІВ (СТОРІНКА 3) === */
+        @keyframes fall {
+            0% {
+                transform: translate(0, -100px) rotate(0deg);
+                opacity: 1;
+            }
+            100% {
+                /* Використання CSS змінних для рандомізації падіння */
+                transform: translate(var(--x-end), calc(100vh + 100px)) rotate(var(--r-end));
+                opacity: 0.5;
+            }
+        }
+
+        .confetti {
+            position: absolute;
+            width: 8px;
+            height: 15px;
+            animation: fall var(--duration) linear infinite;
+            z-index: 50; 
+            border-radius: 2px;
+        }
+        .gift {
+            position: absolute;
+            font-size: 30px; 
+            animation: fall var(--duration) linear infinite;
+            z-index: 50;
+            pointer-events: none; /* Ігнорувати події миші */
+            text-shadow: 0 0 5px rgba(0, 0, 0, 0.5);
+        }
+        /* ========================================================= */
+
+    </style>
+</head>
+<body class="bg-gray-50 h-screen w-screen overflow-hidden">
+
+    <!-- Головний контейнер SPA -->
+    <div id="app" class="h-full w-full">
+        <!-- Сторінки будуть відображатися тут -->
+    </div>
+
+    <script>
+        // Глобальні змінні
+        let currentPage = 1;
+        let timerInterval;
+        let particleInterval; 
+        let animationTimeout; 
+        
+        // ЗМІНЕНО: Використовуємо Tone.Player для завантаження зовнішніх аудіофайлів
+        let signalPlayer, celebrationPlayer; 
+        let isMusic2Playing = false; // Використовується для контролю зациклення святкового треку
+
+        // =========================================================
+        // МАРКЕРИ ДЛЯ АКТИВІВ (ПОСИЛАННЯ НА ЗОБРАЖЕННЯ, ВІДЕО ТА АУДІО)
+        // СЮДИ ПОТРІБНО ВСТАВИТИ ВАШІ ВЛАСНІ URL-АДРЕСИ.
+        // =========================================================
+        const assets = {
+            // --- ЗОБРАЖЕННЯ ТА ВІДЕО ---
+            img1: './img1.jpg', // Фон Сторінки 1
+            img2: './img2.jpg', // Центральне зображення Сторінки 1
+            img3: './img3.jpg', // Фон Сторінки 2 (Таймер)
+            img4: './img4.jpg', // Фон Сторінки 3 (Вітання)
+            video1: './video1.mp4', // Відео на Сторінці 4
+            
+            // --- АУДІО ТРЕКИ (ПОТРІБНО ЗМІНИТИ) ---
+            // 1. Аудіо для сигналу таймера (Сторінка 2). Повинен бути короткий файл (.mp3, .wav).
+            signalAudio: './music1.mp3', 
+
+            // 2. Аудіо для святкової музики (Сторінка 3). Повинен бути довгий, зациклений трек.
+            celebrationAudio: './music2.mp3', 
+        };
+        // =========================================================
+
+        // =========================================================
+        // 1. ЛОГІКА ЗВУКОВОГО СУПРОВОДУ (TONE.JS PLAYER)
+        // =========================================================
+
+        async function initAudio() {
+            // Важливо: запускаємо аудіоконтекст лише після взаємодії з користувачем
+            await Tone.start(); 
+            
+            // Ініціалізація плеєрів Tone.Player, які завантажують файли з URL:
+            
+            // 1. Плеєр для Сигналу (короткий звук, не зациклений)
+            signalPlayer = new Tone.Player({
+                url: assets.signalAudio,
+                loop: false,
+                autostart: false,
+                volume: -6 // Гучність -6dB
+            }).toDestination();
+
+            // 2. Плеєр для Святкової музики (зациклений)
+            celebrationPlayer = new Tone.Player({
+                url: assets.celebrationAudio,
+                loop: true, // Музика буде зациклена
+                autostart: false,
+                volume: -10 // Трохи тихіше, щоб не відволікати
+            }).toDestination();
+
+            console.log("Tone.js Players ініціалізовано. Аудіофайли завантажуються.");
+        }
+
+        function playMusic1() {
+            if (signalPlayer && Tone.context.state === 'running' && signalPlayer.loaded) {
+                // Відтворення короткого звукового файлу з початку
+                signalPlayer.start(Tone.now(), 0); 
+            }
+        }
+        
+        function playMusic2() {
+            if (isMusic2Playing) return;
+            if (celebrationPlayer && Tone.context.state === 'running' && celebrationPlayer.loaded) {
+                // Відтворення святкового треку (він зациклений за налаштуванням)
+                celebrationPlayer.start(Tone.now()); 
+                isMusic2Playing = true;
+                console.log("Святковий трек розпочато.");
+            }
+        }
+
+        function stopMusic() {
+            // Зупинка TONE.JS players та звільнення ресурсів
+            if (signalPlayer) {
+                signalPlayer.stop();
+                signalPlayer.dispose();
+            }
+            if (celebrationPlayer) {
+                celebrationPlayer.stop();
+                celebrationPlayer.dispose();
+            }
+            isMusic2Playing = false;
+            initAudio(); // Ініціалізувати для наступного використання
+        }
+
+        // =========================================================
+        // 2. ЛОГІКА ТАЙМЕРА (СТОРІНКА 2)
+        // =========================================================
+
+        function updateTimer() {
+            const timerEl = document.getElementById('timer-display');
+            const page2 = document.getElementById('page-2-content');
+            if (!timerEl || !page2) return;
+
+            // Отримання поточного часу в Києві
+            const now = new Date();
+            const options = {
+                timeZone: 'Europe/Kyiv',
+                hour: 'numeric', minute: 'numeric', second: 'numeric',
+                hour12: false
+            };
+            // Використовуємо try-catch для надійності, якщо toLocaleTimeString не працює
+            let kh, km, ks;
+            try {
+                const kyivTimeStr = now.toLocaleTimeString('uk-UA', options);
+                [kh, km, ks] = kyivTimeStr.split(':').map(Number);
+            } catch (error) {
+                // Використовуємо локальний час як запасний варіант
+                kh = now.getHours();
+                km = now.getMinutes();
+                ks = now.getSeconds();
+                console.error("Помилка отримання часу Києва. Використовується локальний час.", error);
+            }
+            
+            // Встановлюємо цільовий час на 12:00
+            let targetTime = new Date(now);
+            targetTime.setHours(12, 0, 0, 0); // Сьогодні о 12:00
+
+            // Якщо вже після 12:00 сьогодні, ціль — 12:00 наступного дня
+            if (kh >= 12) {
+                targetTime.setDate(targetTime.getDate() + 1);
+            }
+
+            const diffMs = targetTime - now;
+            const totalSeconds = Math.max(0, Math.floor(diffMs / 1000));
+            
+            const hours = Math.floor(totalSeconds / 3600);
+            const minutes = Math.floor((totalSeconds % 3600) / 60);
+            const seconds = totalSeconds % 60;
+
+            const timeRemaining = `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+            timerEl.textContent = timeRemaining;
+
+            // Логіка зміни фону, звуку та мигання
+            if (totalSeconds <= 10 && totalSeconds > 0) {
+                // За 10 секунд до 12:00
+                page2.style.backgroundColor = '#FFFDD0'; // Кремовий фон
+                timerEl.classList.add('timer-blinking');
+                playMusic1(); // Звуковий супровід (тепер ваш аудіофайл)
+            } else if (totalSeconds <= 0) {
+                // О 12:00 - Перехід на сторінку 3
+                clearInterval(timerInterval);
+                navigateTo(3); // Використовуємо navigateTo для безпечного переходу
+                return;
+            } else {
+                // Нормальний стан
+                page2.style.backgroundColor = 'transparent';
+                timerEl.classList.remove('timer-blinking');
+            }
+        }
+
+        function startTimer() {
+            if (timerInterval) clearInterval(timerInterval);
+            updateTimer();
+            timerInterval = setInterval(updateTimer, 1000);
+        }
+
+        // =========================================================
+        // 3. ЛОГІКА SPA НАВІГАЦІЇ
+        // =========================================================
+
+        function navigateTo(pageNumber) {
+            if (pageNumber < 1 || pageNumber > 5) return;
+            
+            // Зупинка всіх активних процесів перед зміною сторінки
+            if (timerInterval) clearInterval(timerInterval);
+            if (particleInterval) clearInterval(particleInterval); // Зупинка анімації конфеті/подарунків
+            if (animationTimeout) clearTimeout(animationTimeout); // Зупинка текстової анімації
+
+            stopMusic(); // Важливо: зупиняємо музику та очищуємо плеєри перед переходом
+
+            currentPage = pageNumber;
+            renderPage();
+            
+            // Блокування прямого переходу через адресний рядок
+            history.replaceState(null, `Page ${pageNumber}`, `#page-${pageNumber}`);
+        }
+
+        // Блокування переходу за допомогою адресної строки:
+        window.onhashchange = function(e) {
+            e.preventDefault();
+            // Повертаємо URL до поточного стану, якщо хтось спробував його змінити
+            history.replaceState(null, `Page ${currentPage}`, `#page-${currentPage}`);
+            console.warn("Перехід між сторінками за допомогою адресної строки заблоковано.");
+        };
+
+        // =========================================================
+        // 4. ЛОГІКА АНІМАЦІЙ КОНФЕТІ/ПОДАРУНКІВ (СТОРІНКА 3)
+        // =========================================================
+
+        function startConfettiAndGifts() {
+            if (particleInterval) clearInterval(particleInterval);
+            const container = document.getElementById('particle-container');
+            if (!container) return;
+
+            const confettiColors = ['#FF0000', '#00FF00', '#0000FF', '#FFFF00', '#FF00FF', '#00FFFF', '#FFC0CB'];
+            const giftEmojis = ['🎁', '🎉', '🎈', '🎊', '✨', '🎀', '🎂'];
+
+            function createParticle() {
+                if (currentPage !== 3) return;
+
+                const isGift = Math.random() < 0.3; // 30% шанс на подарунок
+                const element = document.createElement('div');
+                
+                // Рандомізація початкової позиції
+                const startX = Math.random() * 100;
+                
+                // CSS Змінні для рандомізації анімації
+                const duration = (Math.random() * 5) + 5; // 5 до 10 секунд
+                const xEnd = (Math.random() * 200) - 100; // Горизонтальний дрейф
+                const rEnd = (Math.random() * 720) - 360; // Фінальне обертання
+
+                element.style.setProperty('--duration', `${duration}s`);
+                element.style.setProperty('--x-end', `${xEnd}px`);
+                element.style.setProperty('--r-end', `${rEnd}deg`);
+                element.style.left = `${startX}vw`;
+                element.style.top = `-50px`; // Старт за межами екрану
+
+                if (isGift) {
+                    element.className = 'gift';
+                    element.textContent = giftEmojis[Math.floor(Math.random() * giftEmojis.length)];
+                } else {
+                    element.className = 'confetti';
+                    const color = confettiColors[Math.floor(Math.random() * confettiColors.length)];
+                    element.style.backgroundColor = color;
+                    element.style.transform = `rotate(${Math.random() * 360}deg)`; // Початкове обертання
+                }
+
+                container.appendChild(element);
+
+                // Видалення елемента після того, як він впаде
+                setTimeout(() => {
+                    if (element.parentElement) {
+                        element.parentElement.removeChild(element);
+                    }
+                }, duration * 1000 + 100);
+            }
+            
+            // Запуск генерації частинок кожні 100 мс
+            particleInterval = setInterval(createParticle, 100); 
+        }
+
+        // =========================================================
+        // 5. ЛОГІКА АНІМАЦІЙ ТЕКСТУ (СТОРІНКА 3)
+        // =========================================================
+
+        function animatePage3() {
+            if (currentPage !== 3) return;
+
+            const text2 = document.getElementById('text-move-2');
+            const text4 = document.getElementById('text-scale-4');
+            const text5 = document.getElementById('text-fade-5');
+
+            if (!text2 || !text4 || !text5) return;
+
+            // Рух (Напис 2)
+            const move = Math.random() < 0.5;
+            text2.style.top = move ? '80%' : '10%';
+            text2.style.left = move ? '80%' : '5%';
+            text2.style.color = move ? '#FFD700' : '#FF69B4'; // Зміна кольору
+
+            // Зміна розміру (Напис 4)
+            const scale = Math.random() * 0.5 + 1; // Від 1x до 1.5x
+            text4.style.transform = `scale(${scale})`;
+            text4.style.color = scale > 1.25 ? '#FF0000' : '#ADD8E6'; // Зміна кольору
+
+            // Зникнення/Поява (Напис 5)
+            text5.style.opacity = text5.style.opacity === '1' ? '0' : '1';
+            
+            // Продовжити анімацію, якщо ми все ще на сторінці 3
+            animationTimeout = setTimeout(animatePage3, 2000); 
+        }
+
+
+        // =========================================================
+        // 6. РЕНДЕРИНГ СТОРІНОК
+        // =========================================================
+
+        function renderPage() {
+            const app = document.getElementById('app');
+            let content = '';
+
+            // Базовий адаптивний стиль для усіх сторінок
+            const baseClasses = "flex flex-col items-center justify-center h-full w-full bg-cover bg-center transition-colors duration-500 relative";
+            const frameClass = "page-frame p-4 sm:p-8 flex flex-col items-center justify-center";
+            const navArrow = (targetPage, direction = 'down') => `
+                <button onclick="navigateTo(${targetPage})" 
+                        class="touch-target absolute bottom-4 ${direction === 'down' ? 'rotate-0' : 'rotate-180'} bg-gray-600 text-white hover:bg-gray-800 transition duration-300">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                    </svg>
+                </button>
+            `;
+            
+            switch (currentPage) {
+                case 1:
+                    content = `
+                        <div id="page-1-content" class="${baseClasses}" style="background-image: url('${assets.img1}')">
+                            <div class="${frameClass} w-11/12 h-11/12 bg-white/90">
+                                <div class="text-center p-4">
+                                    <!-- Напис 1 -->
+                                    <h1 style="font-family: 'Cinzel Decorative', serif; color: #3333ff;" 
+                                        class="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-extrabold mb-2 text-shadow">
+                                        Вас вітає сторінка БАГИНІ
+                                    </h1>
+                                    <!-- Напис 2 -->
+                                    <p style="font-family: 'Crimson Text', 'Helvetica', sans-serif; color: #3333ff;" 
+                                        class="text-lg sm:text-xl md:text-2xl mb-8">
+                                        Вже дуже скоро…
+                                    </p>
+                                    <!-- Зображення-кружок -->
+                                    <div class="w-32 h-32 sm:w-48 sm:h-48 rounded-full overflow-hidden shadow-2xl mx-auto">
+                                        <img src="${assets.img2}" alt="Головне зображення" class="w-full h-full object-cover">
+                                    </div>
+                                </div>
+                            </div>
+                            ${navArrow(2)}
+                        </div>
+                    `;
+                    break;
+
+                case 2:
+                    startTimer(); // Запуск таймера
+                    content = `
+                        <div id="page-2-content" class="${baseClasses} transition-all duration-1000" style="background-image: url('${assets.img3}')">
+                            <div class="${frameClass} w-11/12 h-11/12 bg-white/90 p-12">
+                                <h2 class="text-3xl font-bold mb-8 text-gray-800">Залишилося до 12:00 (Київ)</h2>
+                                <!-- Таймер -->
+                                <div id="timer-display" 
+                                     class="text-7xl sm:text-8xl md:text-9xl font-extrabold text-red-600 transition duration-500" 
+                                     style="font-family: 'Open Sans', Georgia, serif;">
+                                    00:00:00
+                                </div>
+                                <p class="mt-4 text-gray-500">За 10 секунд до кінця фон зміниться, а таймер почне мигати.</p>
+                            </div>
+                        </div>
+                    `;
+                    break;
+                
+                case 3:
+                    playMusic2(); // Запуск святкового аудіофайлу
+                    content = `
+                        <div id="page-3-content" class="${baseClasses}" style="background-image: url('${assets.img4}')">
+                            <!-- Контейнер для падаючих конфеті/подарунків -->
+                            <div id="particle-container" class="absolute inset-0 z-40 overflow-hidden"></div>
+                            
+                            <div class="absolute inset-0 bg-black/40 z-30"></div>
+                            
+                            <!-- Напис 1: Зміна розміру + Пульсація -->
+                            <h1 class="text-3xl sm:text-5xl md:text-7xl lg:text-8xl font-black text-yellow-300 text-pulse absolute top-1/4 z-50"
+                                style="font-family: 'Playfair Display', serif; animation-duration: 2.5s;">
+                                Вітаємо!!!
+                            </h1>
+                            
+                            <!-- Напис 2: Рух по екрану + Зміна кольору -->
+                            <h2 id="text-move-2" 
+                                class="text-xl sm:text-3xl md:text-5xl font-bold text-white absolute transition-all duration-1000 ease-in-out z-50" 
+                                style="font-family: 'Roboto', sans-serif; top: 10%; left: 5%; color: #FF69B4;">
+                                З днем народження!
+                            </h2>
+
+                            <!-- Напис 3: Пульсація -->
+                            <p class="text-lg sm:text-2xl md:text-3xl font-medium text-green-400 text-pulse absolute bottom-1/4 left-1/4 z-50"
+                                style="font-family: 'Open Sans', sans-serif; animation-duration: 4s;">
+                                Здоров’я!
+                            </p>
+
+                            <!-- Напис 4: Збільшення/Зменшення + Зміна кольору -->
+                            <p id="text-scale-4" 
+                                class="text-lg sm:text-2xl md:text-4xl font-normal absolute top-1/2 right-1/4 transition-all duration-1000 ease-in-out z-50" 
+                                style="font-family: 'Crimson Text', serif; color: #ADD8E6;">
+                                Щастя!
+                            </p>
+
+                            <!-- Напис 5: Зникнення/Поява -->
+                            <p id="text-fade-5" 
+                                class="text-xl sm:text-3xl md:text-5xl font-black absolute bottom-1/2 left-1/2 transform -translate-x-1/2 text-white transition-opacity duration-1000 z-50" 
+                                style="font-family: 'Playfair Display', serif;">
+                                Вдачі!
+                            </p>
+
+                            ${navArrow(4)}
+                        </div>
+                    `;
+                    // Логіка анімації для Page 3 (JS)
+                    setTimeout(() => {
+                        animatePage3(); 
+                        startConfettiAndGifts(); // Запуск анімації конфеті/подарунків
+                    }, 100);
+                    break;
+
+                case 4:
+                    content = `
+                        <div id="page-4-content" class="${baseClasses} bg-gray-200">
+                            <div class="${frameClass} w-11/12 h-11/12 bg-white/90 p-4 sm:p-8">
+                                <h2 class="text-3xl sm:text-4xl font-bold mb-8 text-gray-700">Відеосупровід</h2>
+                                <!-- Відео -->
+                                <div class="w-full max-w-2xl aspect-video bg-gray-700 rounded-lg shadow-xl overflow-hidden">
+                                    <video id="video-player" controls autoplay muted playsinline class="w-full h-full object-cover">
+                                        <source src="${assets.video1}" type="video/mp4">
+                                        Ваш браузер не підтримує тег video.
+                                    </video>
+                                </div>
+                            </div>
+                            ${navArrow(5)}
+                        </div>
+                    `;
+                    // Автозапуск відео (для надійності)
+                    setTimeout(() => {
+                        const video = document.getElementById('video-player');
+                        if (video) {
+                            video.volume = 0.5; // Звук відео
+                            video.play().catch(e => console.error("Помилка автозапуску відео:", e));
+                        }
+                    }, 500);
+                    break;
+                
+                case 5:
+                    content = `
+                        <div id="page-5-content" class="${baseClasses} bg-gray-900">
+                            <div class="text-center text-white p-10">
+                                <h1 class="text-5xl font-extrabold mb-4">Кінець</h1>
+                                <p class="text-xl text-gray-400">Дякуємо за перегляд SPA.</p>
+                            </div>
+                            ${navArrow(1, 'up')} <!-- Повернення на початок -->
+                        </div>
+                    `;
+                    break;
+            }
+
+            app.innerHTML = content;
+        }
+
+        // =========================================================
+        // 7. ІНІЦІАЛІЗАЦІЯ
+        // =========================================================
+        
+        // Викликається при завантаженні сторінки
+        window.onload = () => {
+            initAudio(); // Ініціалізація аудіоконтексту та завантаження файлів
+            // Перевіряємо, чи є в URL хеш, щоб розпочати з правильної сторінки, або починаємо з Page 1
+            const initialHash = window.location.hash;
+            const initialPage = initialHash.match(/#page-(\d)/);
+            
+            if (initialPage && initialPage[1] >= 1 && initialPage[1] <= 5) {
+                // Встановлюємо початкову сторінку, але блокуємо ручну зміну
+                currentPage = parseInt(initialPage[1]);
+            }
+            // Рендеримо поточну сторінку
+            renderPage();
+            
+            // Гарантуємо, що історія оновлена
+            history.replaceState(null, `Page ${currentPage}`, `#page-${currentPage}`);
+        };
+
+    </script>
+</body>
+</html>
