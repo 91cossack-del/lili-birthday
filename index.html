@@ -116,13 +116,13 @@
             img3: './img3.jpg', // Фон Сторінки 2 (Таймер)
             img4: './img4.jpg', // Фон Сторінки 3 (Вітання)
             
-            // --- ВІДЕО ---
-            // ВАЖЛИВО! Посилання на Google Drive (uc?export=download) часто НЕ ПРАЦЮЮТЬ для вбудовування.
-            // Google блокує їх. Використовуйте пряме посилання на .mp4 (наприклад, з Vimeo, S3, або власного хостингу).
-            // Я замінив посилання на тестове відео (BigBuckBunny), щоб показати, що код відтворення працює.
+            // --- ВІДЕО (Для Vimeo або YouTube використовуйте EMBED посилання) ---
+            // ТУТ ВАЖЛИВО ВСТАВИТИ ВАШЕ ПОСИЛАННЯ EMBED (для Vimeo це виглядає як player.vimeo.com/video/...)
             video1: 'https://vimeo.com/manage/videos/1137998762', 
-            // Замініть 'https://storage.googleapis.com/...' на ВАШЕ ПРЯМЕ ПОСИЛАННЯ.
             
+            // --- ПОСИЛАННЯ (!!! ВАЖЛИВО: ЗМІНІТЬ # НА ВАШЕ ЦІЛЬОВЕ ПОСИЛАННЯ !!!) ---
+            link1: 'https://vimeo.com/manage/videos/1137998762', 
+
             // --- АУДІО ТРЕКИ ---
             signalAudio: './music1.mp3', // ВАЖЛИВО: Замініть на реальний URL
             celebrationAudio: './music2.mp3', // ВАЖЛИВО: Замініть на реальний URL
@@ -242,7 +242,7 @@
             
             // Встановлюємо цільовий час на 14:00 
             let targetTime = new Date(now);
-            targetTime.setHours(10,20, 0, 0); // Сьогодні о 14:00 (ЗМІНИТИ ТУТ)
+            targetTime.setHours(11, 0, 0, 0); // Сьогодні о 14:00 (ЗМІНИТИ ТУТ)
 
             // Якщо цільовий час вже минув сьогодні, ціль — 14:00 наступного дня
             if (now.getTime() >= targetTime.getTime()) {
@@ -455,13 +455,12 @@
                     content = `
                         <div id="page-2-content" class="${baseClasses} transition-all duration-1000" style="background-image: url('${assets.img3}')">
                             <!-- Контент без внутрішнього обрамлення -->
-                            <!-- ВИПРАВЛЕНО: Збільшено max-width до max-w-xl для більшої рамки -->
+                            <!-- Рамка збільшена до max-w-xl -->
                             <div class="text-center p-6 sm:p-12 bg-white/70 rounded-3xl shadow-2xl max-w-xl">
-                                <h2 class="text-3xl font-bold mb-8 text-gray-800">Залишилося до 14:00 (Київ)</h2>
+                                <!-- ЗМІНЕНО: Напис про час видалено на вимогу користувача -->
                                 <!-- Таймер -->
-                                <!-- Зменшено базовий розмір шрифту з text-6xl на text-5xl -->
                                 <div id="timer-display" 
-                                     class="text-5xl sm:text-7xl md:text-8xl lg:text-9xl font-extrabold text-red-600 transition duration-500" 
+                                     class="text-5xl sm:text-7xl md:text-8xl lg:text-9xl font-extrabold text-red-600 transition duration-500 mt-6 mb-6" 
                                      style="font-family: 'Open Sans', Georgia, serif;">
                                     00:00:00
                                 </div>
@@ -529,37 +528,33 @@
                             <!-- Контент без внутрішнього обрамлення -->
                             <div class="w-full max-w-4xl p-4 sm:p-8 flex flex-col items-center">
                                 <h2 class="text-3xl sm:text-4xl font-bold mb-8 text-gray-700">Відеосупровід</h2>
-                                <!-- Відео -->
+                                <!-- Відео (Тепер використовуємо IFRAME для кращої сумісності з Vimeo/YouTube) -->
                                 <div class="w-full max-w-2xl aspect-video bg-gray-700 rounded-lg shadow-xl overflow-hidden">
-                                    <video id="video-player" controls autoplay muted loop playsinline class="w-full h-full object-cover">
-                                        <!-- Використовуємо URL-адресу з тестовим відео -->
-                                        <source src="${assets.video1}" type="video/mp4">
-                                        Ваш браузер не підтримує тег video.
-                                    </video>
+                                    <!-- ВАЖЛИВО: Тут має бути EMBED-посилання на ваше відео з Vimeo/YouTube -->
+                                    <iframe src="${assets.video1}" 
+                                            frameborder="0" 
+                                            allow="autoplay; fullscreen; picture-in-picture" 
+                                            allowfullscreen 
+                                            class="w-full h-full">
+                                    </iframe>
                                 </div>
 
-                                <!-- ДОДАНО: Місце для посилання під відео -->
-                                <a href="#" 
+                                <!-- ПОСИЛАННЯ ПІД ВІДЕО -->
+                                <!-- Посилання береться зі змінної assets.link1 -->
+                                <a href="${assets.link1}" 
                                    target="_blank" 
                                    rel="noopener noreferrer"
                                    class="mt-6 px-6 py-3 bg-blue-600 text-white font-semibold rounded-lg shadow-md hover:bg-blue-700 transition duration-300">
                                     Перейти за посиланням
                                 </a>
                                 <p class="mt-2 text-sm text-gray-600">
-                                    (Замініть "#" на ваше посилання у коді)
+                                    (Постійне посилання прописано у змінній <code class="font-mono text-pink-600">assets.link1</code> на початку коду.)
                                 </p>
                             </div>
                             ${navArrow(5)}
                         </div>
                     `;
-                    // Автозапуск відео (для надійності)
-                    setTimeout(() => {
-                        const video = document.getElementById('video-player');
-                        if (video) {
-                            video.volume = 0.5; // Звук відео
-                            video.play().catch(e => console.error("Помилка автозапуску відео:", e));
-                        }
-                    }, 500);
+                    // Специфічна логіка відтворення відео видалена, оскільки iframe це обробляє
                     break;
                 
                 case 5:
