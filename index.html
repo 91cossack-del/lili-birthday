@@ -107,6 +107,7 @@
         // =========================================================
         // МАРКЕРИ ДЛЯ АКТИВІВ (ПОСИЛАННЯ НА ЗОБРАЖЕННЯ, ВІДЕО ТА АУДІО)
         // СЮДИ ПОТРІБНО ВСТАВИТИ ВАШІ ВЛАСНІ URL-АДРЕСИ.
+        // !!! ВАЖЛИВО: Замініть ці placeholder-URL-адреси, інакше звук не працюватиме. !!!
         // =========================================================
         const assets = {
             // --- ЗОБРАЖЕННЯ ТА ВІДЕО ---
@@ -116,11 +117,11 @@
             img4: './img4.jpg', // Фон Сторінки 3 (Вітання)
             
             // Використання формату прямого завантаження з Google Drive
-            video1: 'https://drive.google.com/uc?export=download&id={https://drive.google.com/file/d/1HNfPR-QG88B5zwIe2YUCFhJKwy1AfbmJ/view}', 
+            video1: 'https://drive.google.com/file/d/1HNfPR-QG88B5zwIe2YUCFhJKwy1AfbmJ/view', 
             
             // --- АУДІО ТРЕКИ ---
-            signalAudio: 'music1.mp3', 
-            celebrationAudio: 'music2.mp3', 
+            signalAudio: './music1.mp3', // ВАЖЛИВО: Замініть на реальний URL
+            celebrationAudio: './music2.mp3', // ВАЖЛИВО: Замініть на реальний URL
         };
         // =========================================================
 
@@ -129,8 +130,7 @@
         // =========================================================
 
         async function initAudio() {
-            // Важливо: запускаємо аудіоконтекст лише після взаємодії з користувачем
-            await Tone.start(); 
+            // Аудіоконтекст запускається пізніше, під час першої взаємодії з користувачем
             
             // 1. Плеєр для Сигналу (короткий звук, не зациклений)
             signalPlayer = new Tone.Player({
@@ -150,11 +150,28 @@
 
             console.log("Tone.js Players ініціалізовано. Аудіофайли завантажуються.");
         }
+        
+        // ВАЖЛИВО: Ця функція запускає аудіоконтекст після першої взаємодії з користувачем (кліку)
+        function handleInitialInteraction() {
+            const app = document.getElementById('app');
+            
+            if (Tone.context.state !== 'running') {
+                Tone.start().then(() => {
+                    console.log("Tone.js AudioContext запущено після взаємодії з користувачем.");
+                    // Видаляємо слухача, щоб функція спрацювала лише один раз.
+                    app.removeEventListener('click', handleInitialInteraction);
+                }).catch(error => {
+                    console.error("Помилка при запуску Tone.js AudioContext:", error);
+                });
+            }
+        }
+
 
         function playMusic1() {
             // Запобігаємо постійному перезапуску. Відтворюємо лише 1 раз.
             if (isSignalPlaying) return; 
             
+            // Додано перевірку: аудіоконтекст має бути запущений
             if (signalPlayer && Tone.context.state === 'running' && signalPlayer.loaded) {
                 // Відтворення короткого звукового файлу з початку
                 signalPlayer.start(Tone.now(), 0); 
@@ -166,6 +183,7 @@
         
         function playMusic2() {
             if (isMusic2Playing) return;
+            // Додано перевірку: аудіоконтекст має бути запущений
             if (celebrationPlayer && Tone.context.state === 'running' && celebrationPlayer.loaded) {
                 // Відтворення святкового треку (він зациклений за налаштуванням)
                 celebrationPlayer.start(Tone.now()); 
@@ -178,15 +196,15 @@
             // Зупинка TONE.JS players та звільнення ресурсів
             if (signalPlayer) {
                 signalPlayer.stop();
-                signalPlayer.dispose();
+                // signalPlayer.dispose(); // Не видаляємо, оскільки ініціалізація відбувається в onload
             }
             if (celebrationPlayer) {
                 celebrationPlayer.stop();
-                celebrationPlayer.dispose();
+                // celebrationPlayer.dispose();
             }
             isMusic2Playing = false;
             isSignalPlaying = false; // Скидаємо прапорець
-            initAudio(); // Ініціалізувати для наступного використання
+            // initAudio(); // Не ініціалізуємо повторно, щоб не перезавантажувати файли
         }
 
         // =========================================================
@@ -218,11 +236,11 @@
                 console.error("Помилка отримання часу Києва. Використовується локальний час.", error);
             }
             
-            // Встановлюємо цільовий час на 09:25
+            // Встановлюємо цільовий час на 14:00 
             let targetTime = new Date(now);
-            targetTime.setHours(9, 35, 0, 0); // Сьогодні о 09:25
+            targetTime.setHours(9, 50, 0, 0); // Сьогодні о 14:00 (ЗМІНИТИ ТУТ)
 
-            // Якщо цільовий час вже минув сьогодні, ціль — 09:25 наступного дня
+            // Якщо цільовий час вже минув сьогодні, ціль — 14:00 наступного дня
             if (now.getTime() >= targetTime.getTime()) {
                 targetTime.setDate(targetTime.getDate() + 1);
             }
@@ -239,12 +257,12 @@
 
             // Логіка зміни фону, звуку та мигання
             if (totalSeconds <= 10 && totalSeconds > 0) {
-                // За 10 секунд до 09:25
+                // За 10 секунд до кінця
                 page2.style.backgroundColor = '#FFFDD0'; // Кремовий фон
                 timerEl.classList.add('timer-blinking');
                 playMusic1(); // Тепер викликається лише 1 раз завдяки прапорцю isSignalPlaying
             } else if (totalSeconds <= 0) {
-                // О 09:25 - Перехід на сторінку 3
+                // О цільовому часі - Перехід на сторінку 3
                 clearInterval(timerInterval);
                 navigateTo(3); // Використовуємо navigateTo для безпечного переходу
                 return;
@@ -274,7 +292,7 @@
             if (particleInterval) clearInterval(particleInterval); // Зупинка анімації конфеті/подарунків
             if (animationTimeout) clearTimeout(animationTimeout); // Зупинка текстової анімації
 
-            stopMusic(); // Важливо: зупиняємо музику та очищуємо плеєри перед переходом
+            stopMusic(); // Важливо: зупиняємо музику перед переходом
 
             currentPage = pageNumber;
             renderPage();
@@ -433,10 +451,11 @@
                         <div id="page-2-content" class="${baseClasses} transition-all duration-1000" style="background-image: url('${assets.img3}')">
                             <!-- Контент без внутрішнього обрамлення -->
                             <div class="text-center p-12 bg-white/70 rounded-3xl shadow-2xl max-w-md">
-                                <h2 class="text-3xl font-bold mb-8 text-gray-800">Залишилося до 09:25 (Київ)</h2>
+                                <h2 class="text-3xl font-bold mb-8 text-gray-800">Залишилося до 14:00 (Київ)</h2>
                                 <!-- Таймер -->
+                                <!-- Змінені класи для кращої адаптивності на мобільних пристроях: text-6xl (порівняно з text-7xl) на маленьких екранах -->
                                 <div id="timer-display" 
-                                     class="text-7xl sm:text-8xl md:text-9xl font-extrabold text-red-600 transition duration-500" 
+                                     class="text-6xl sm:text-7xl md:text-8xl lg:text-9xl font-extrabold text-red-600 transition duration-500" 
                                      style="font-family: 'Open Sans', Georgia, serif;">
                                     00:00:00
                                 </div>
@@ -548,7 +567,12 @@
         
         // Викликається при завантаженні сторінки
         window.onload = () => {
-            initAudio(); // Ініціалізація аудіоконтексту та завантаження файлів
+            initAudio(); // Ініціалізація аудіо (без запуску контексту)
+            
+            const app = document.getElementById('app');
+            // Прив'язка запуску аудіоконтексту до першого кліку користувача (вирішення проблеми зі звуком)
+            app.addEventListener('click', handleInitialInteraction, { once: true });
+
             // Перевіряємо, чи є в URL хеш, щоб розпочати з правильної сторінки, або починаємо з Page 1
             const initialHash = window.location.hash;
             const initialPage = initialHash.match(/#page-(\d)/);
