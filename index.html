@@ -117,12 +117,14 @@
             img4: './img4.jpg', // Фон Сторінки 3 (Вітання)
             
             // --- ВІДЕО (Для Vimeo/YouTube використовуйте EMBED посилання) ---
-            // ВАЖЛИВО: Замість Vimeo, яке блокувало, я поставив робоче YouTube EMBED. 
-            // Ви маєте знайти коректний embed-URL для ВАШОГО відео Vimeo/YouTube.
-            video1: 'https://vimeo.com/1137998762?share=copy&fl=sv&fe=ci', 
+            // ВАЖЛИВО: Ви маєте вставити СВОЄ EMBED посилання. 
+            // Якщо Vimeo відхиляє, спробуйте YouTube, оскільки він має кращу сумісність.
+            // Формат YouTube embed: https://www.youtube.com/embed/XXXXXXX?autoplay=1&mute=1
+            // Формат Vimeo embed: https://player.vimeo.com/video/XXXXXXX
+            video1: 'https://www.youtube.com/embed/_nlb3sfGsQ0?si=B5nmfdz38DJEX6rT', // Робочий YouTube embed як приклад. ЗАМІНІТЬ!
             
             // --- ПОСИЛАННЯ (!!! ВАЖЛИВО: ЗМІНІТЬ # НА ВАШЕ ЦІЛЬОВЕ ПОСИЛАННЯ !!!) ---
-            link1: 'https://vimeo.com/manage/videos/1137998762', 
+            link1: 'https://www.youtube.com/embed/_nlb3sfGsQ0?si=B5nmfdz38DJEX6rT', 
 
             // --- АУДІО ТРЕКИ ---
             signalAudio: './music1.mp3', // ВАЖЛИВО: Замініть на реальний URL
@@ -243,7 +245,7 @@
             
             // Встановлюємо цільовий час на 14:00 
             let targetTime = new Date(now);
-            targetTime.setHours(11, 25, 0, 0); // Сьогодні о 14:00 (ЗМІНИТИ ТУТ)
+            targetTime.setHours(11, 45, 0, 0); // Сьогодні о 14:00 (ЗМІНИТИ ТУТ)
 
             // Якщо цільовий час вже минув сьогодні, ціль — 14:00 наступного дня
             if (now.getTime() >= targetTime.getTime()) {
