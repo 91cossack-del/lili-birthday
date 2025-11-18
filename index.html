@@ -106,8 +106,7 @@
 
         // =========================================================
         // МАРКЕРИ ДЛЯ АКТИВІВ (ПОСИЛАННЯ НА ЗОБРАЖЕННЯ, ВІДЕО ТА АУДІО)
-        // СЮДИ ПОТРІБНО ВСТАВИТИ ВАШІ ВЛАСНІ URL-АДРЕСИ.
-        // !!! ВАЖЛИВО: Замініть ці placeholder-URL-адреси, інакше звук не працюватиме. !!!
+        // !!! ВАЖЛИВО: Замініть ці URL-адреси, інакше звук не працюватиме. !!!
         // =========================================================
         const assets = {
             // --- ЗОБРАЖЕННЯ ---
@@ -116,19 +115,16 @@
             img3: './img3.jpg', // Фон Сторінки 2 (Таймер)
             img4: './img4.jpg', // Фон Сторінки 3 (Вітання)
             
-            // --- ВІДЕО (Для Vimeo/YouTube використовуйте EMBED посилання) ---
-            // ВАЖЛИВО: Ви маєте вставити СВОЄ EMBED посилання. 
-            // Якщо Vimeo відхиляє, спробуйте YouTube, оскільки він має кращу сумісність.
-            // Формат YouTube embed: https://www.youtube.com/embed/XXXXXXX?autoplay=1&mute=1
-            // Формат Vimeo embed: https://player.vimeo.com/video/XXXXXXX
-            video1: 'https://www.youtube.com/embed/_nlb3sfGsQ0?si=B5nmfdz38DJEX6rT', // Робочий YouTube embed як приклад. ЗАМІНІТЬ!
+            // --- ВІДЕО (EMBED посилання) ---
+            // ВАЖЛИВО: Зараз тут робочий YouTube embed-URL як приклад. ЗАМІНІТЬ на ваш!
+            video1: 'https://www.youtube.com/embed/_nlb3sfGsQ0?si=XRWHP1aJBgMOPCvX', 
             
             // --- ПОСИЛАННЯ (!!! ВАЖЛИВО: ЗМІНІТЬ # НА ВАШЕ ЦІЛЬОВЕ ПОСИЛАННЯ !!!) ---
-            link1: 'https://www.youtube.com/embed/_nlb3sfGsQ0?si=B5nmfdz38DJEX6rT', 
+            link1: 'https://www.youtube.com/embed/_nlb3sfGsQ0?si=XRWHP1aJBgMOPCvX', 
 
             // --- АУДІО ТРЕКИ ---
-            signalAudio: './music1.mp3', // ВАЖЛИВО: Замініть на реальний URL
-            celebrationAudio: './music2.mp3', // ВАЖЛИВО: Замініть на реальний URL
+            signalAudio: './music1.mp3', // Замініть на реальний URL (наприклад, коротка фанфара)
+            celebrationAudio: './music2.mp3', // Замініть на реальний URL (наприклад, фонова музика)
         };
         // =========================================================
 
@@ -203,15 +199,12 @@
             // Зупинка TONE.JS players та звільнення ресурсів
             if (signalPlayer) {
                 signalPlayer.stop();
-                // signalPlayer.dispose(); // Не видаляємо, оскільки ініціалізація відбувається в onload
             }
             if (celebrationPlayer) {
                 celebrationPlayer.stop();
-                // celebrationPlayer.dispose();
             }
             isMusic2Playing = false;
             isSignalPlaying = false; // Скидаємо прапорець
-            // initAudio(); // Не ініціалізуємо повторно, щоб не перезавантажувати файли
         }
 
         // =========================================================
@@ -223,43 +216,24 @@
             const page2 = document.getElementById('page-2-content');
             if (!timerEl || !page2) return;
 
-            // Отримання поточного часу в Києві
             const now = new Date();
-            const options = {
-                timeZone: 'Europe/Kyiv',
-                hour: 'numeric', minute: 'numeric', second: 'numeric',
-                hour12: false
-            };
-            // Використовуємо try-catch для надійності, якщо toLocaleTimeString не працює
-            let kh, km, ks;
-            try {
-                const kyivTimeStr = now.toLocaleTimeString('uk-UA', options);
-                [kh, km, ks] = kyivTimeStr.split(':').map(Number);
-            } catch (error) {
-                // Використовуємо локальний час як запасний варіант
-                kh = now.getHours();
-                km = now.getMinutes();
-                ks = now.getSeconds();
-                console.error("Помилка отримання часу Києва. Використовується локальний час.", error);
-            }
             
-            // Встановлюємо цільовий час на 14:00 
+            // *** ОНОВЛЕНА ЛОГІКА ТАРГЕТНОГО ЧАСУ (КОЖНУ ГОДИНУ) ***
             let targetTime = new Date(now);
-            targetTime.setHours(12, 30, 0, 0); // Сьогодні о 14:00 (ЗМІНИТИ ТУТ)
-
-            // Якщо цільовий час вже минув сьогодні, ціль — 14:00 наступного дня
-            if (now.getTime() >= targetTime.getTime()) {
-                targetTime.setDate(targetTime.getDate() + 1);
-            }
-
+            // Встановлюємо час на початок поточної години
+            targetTime.setMinutes(0, 0, 0); 
+            // Додаємо 1 годину, щоб отримати початок НАСТУПНОЇ години
+            targetTime.setHours(targetTime.getHours() + 1); 
+            // ******************************************************
+            
             const diffMs = targetTime - now;
             const totalSeconds = Math.max(0, Math.floor(diffMs / 1000));
             
-            const hours = Math.floor(totalSeconds / 3600);
-            const minutes = Math.floor((totalSeconds % 3600) / 60);
+            // Таймер показує лише хвилини та секунди до початку наступної години
+            const minutes = Math.floor(totalSeconds / 60);
             const seconds = totalSeconds % 60;
 
-            const timeRemaining = `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+            const timeRemaining = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
             timerEl.textContent = timeRemaining;
 
             // Логіка зміни фону, звуку та мигання
@@ -267,9 +241,9 @@
                 // За 10 секунд до кінця
                 page2.style.backgroundColor = '#FFFDD0'; // Кремовий фон
                 timerEl.classList.add('timer-blinking');
-                playMusic1(); // Тепер викликається лише 1 раз завдяки прапорцю isSignalPlaying
+                playMusic1(); // Сигнал
             } else if (totalSeconds <= 0) {
-                // О цільовому часі - Перехід на сторінку 3
+                // О цільовому часі (початок нової години) - Перехід на сторінку 3
                 clearInterval(timerInterval);
                 navigateTo(3); // Використовуємо navigateTo для безпечного переходу
                 return;
@@ -294,12 +268,12 @@
         function navigateTo(pageNumber) {
             if (pageNumber < 1 || pageNumber > 5) return;
             
-            // Зупинка всіх активних процесів перед зміною сторінки
+            // КЛЮЧОВИЙ МОМЕНТ ДЛЯ ОПТИМІЗАЦІЇ: ОЧИЩЕННЯ РЕСУРСІВ
             if (timerInterval) clearInterval(timerInterval);
             if (particleInterval) clearInterval(particleInterval); // Зупинка анімації конфеті/подарунків
             if (animationTimeout) clearTimeout(animationTimeout); // Зупинка текстової анімації
 
-            stopMusic(); // Важливо: зупиняємо музику перед переходом
+            stopMusic(); // Зупиняємо музику перед переходом
 
             currentPage = pageNumber;
             renderPage();
@@ -311,7 +285,7 @@
         // Блокування переходу за допомогою адресної строки:
         window.onhashchange = function(e) {
             e.preventDefault();
-            // Повертаємо URL до поточного стану, якщо хтось спробував його змінити
+            // Повертаємо URL до поточного стану
             history.replaceState(null, `Page ${currentPage}`, `#page-${currentPage}`);
             console.warn("Перехід між сторінками за допомогою адресної строки заблоковано.");
         };
@@ -327,6 +301,7 @@
 
             const confettiColors = ['#FF0000', '#00FF00', '#0000FF', '#FFFF00', '#FF00FF', '#00FFFF', '#FFC0CB'];
             const giftEmojis = ['🎁', '🎉', '🎈', '🎊', '✨', '🎀', '🎂'];
+            let activeParticles = []; // Масив для відстеження активних частинок
 
             function createParticle() {
                 if (currentPage !== 3) return;
@@ -359,12 +334,17 @@
                 }
 
                 container.appendChild(element);
+                
+                // Додаємо частинку в масив
+                activeParticles.push(element);
 
                 // Видалення елемента після того, як він впаде
-                setTimeout(() => {
+                const removalTimeout = setTimeout(() => {
                     if (element.parentElement) {
                         element.parentElement.removeChild(element);
                     }
+                    // Видаляємо з масиву
+                    activeParticles = activeParticles.filter(p => p !== element);
                 }, duration * 1000 + 100);
             }
             
@@ -415,13 +395,11 @@
             // Базовий адаптивний стиль для усіх сторінок
             const baseClasses = "flex flex-col items-center justify-center h-full w-full bg-cover bg-center transition-colors duration-500 relative";
             
-            // Клас для контейнера контенту (ВИДАЛЕНО: frameClass)
-            
-            // ВИПРАВЛЕНО: Додано 'z-50' до стрілок, щоб вони були поверх інших елементів (особливо на сторінці 3)
+            // Додано 'z-50' до стрілок, щоб вони були поверх інших елементів (особливо на сторінці 3)
             const navArrow = (targetPage, direction = 'down') => `
                 <button onclick="navigateTo(${targetPage})" 
-                        class="z-50 touch-target absolute bottom-4 ${direction === 'down' ? 'rotate-0' : 'rotate-180'} bg-gray-600 text-white hover:bg-gray-800 transition duration-300">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        class="z-50 touch-target absolute ${direction === 'down' ? 'bottom-4' : 'top-4'} bg-gray-600 text-white hover:bg-gray-800 transition duration-300">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 ${direction === 'up' ? 'rotate-180' : 'rotate-0'}" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
                     </svg>
                 </button>
@@ -460,15 +438,18 @@
                             <!-- Контент без внутрішнього обрамлення -->
                             <!-- Рамка збільшена до max-w-xl -->
                             <div class="text-center p-6 sm:p-12 bg-white/70 rounded-3xl shadow-2xl max-w-xl">
-                                <!-- Напис про час видалено на вимогу користувача -->
+                                <p class="mb-4 text-xl sm:text-2xl md:text-3xl text-gray-800 font-bold">
+                                    Залишилось до початку наступної години:
+                                </p>
                                 <!-- Таймер -->
                                 <div id="timer-display" 
-                                     class="text-5xl sm:text-7xl md:text-8xl lg:text-9xl font-extrabold text-red-600 transition duration-500 mt-6 mb-6" 
+                                     class="text-7xl sm:text-8xl md:text-9xl font-extrabold text-red-600 transition duration-500 mt-6 mb-6" 
                                      style="font-family: 'Open Sans', Georgia, serif;">
-                                    00:00:00
+                                    00:00
                                 </div>
-                                <p class="mt-4 text-gray-700 font-medium">За 10 секунд до кінця фон зміниться, а таймер почне мигати.</p>
+                                <!-- ВИДАЛЕНО: напис про блимання таймера -->
                             </div>
+                            ${navArrow(3)}
                         </div>
                     `;
                     break;
@@ -546,10 +527,9 @@
                                 <a href="${assets.link1}" 
                                    target="_blank" 
                                    rel="noopener noreferrer"
-                                   class="mt-6 px-6 py-3 bg-blue-600 text-white font-semibold rounded-lg shadow-md hover:bg-blue-700 transition duration-300">
+                                   class="mt-6 px-6 py-3 bg-blue-600 text-white font-semibold rounded-lg shadow-md hover:bg-blue-700 transition duration-300 touch-target">
                                     Перейти за посиланням
                                 </a>
-                                <!-- Підказка про змінну видалена -->
                             </div>
                             ${navArrow(5)}
                         </div>
