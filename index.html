@@ -238,7 +238,7 @@
             
             // Встановлюємо цільовий час на 14:00 
             let targetTime = new Date(now);
-            targetTime.setHours(9, 50, 0, 0); // Сьогодні о 14:00 (ЗМІНИТИ ТУТ)
+            targetTime.setHours(10, 5, 0, 0); // Сьогодні о 14:00 (ЗМІНИТИ ТУТ)
 
             // Якщо цільовий час вже минув сьогодні, ціль — 14:00 наступного дня
             if (now.getTime() >= targetTime.getTime()) {
@@ -412,7 +412,7 @@
             
             const navArrow = (targetPage, direction = 'down') => `
                 <button onclick="navigateTo(${targetPage})" 
-                        class="touch-target absolute bottom-4 ${direction === 'down' ? 'rotate-0' : 'rotate-180'} bg-gray-600 text-white hover:bg-gray-800 transition duration-300">
+                        class="z-50 touch-target absolute bottom-4 ${direction === 'down' ? 'rotate-0' : 'rotate-180'} bg-gray-600 text-white hover:bg-gray-800 transition duration-300">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
                     </svg>
@@ -450,12 +450,13 @@
                     content = `
                         <div id="page-2-content" class="${baseClasses} transition-all duration-1000" style="background-image: url('${assets.img3}')">
                             <!-- Контент без внутрішнього обрамлення -->
-                            <div class="text-center p-12 bg-white/70 rounded-3xl shadow-2xl max-w-md">
+                            <!-- ВИПРАВЛЕНО: Зменшено padding на малих екранах з p-12 на p-6 -->
+                            <div class="text-center p-6 sm:p-12 bg-white/70 rounded-3xl shadow-2xl max-w-md">
                                 <h2 class="text-3xl font-bold mb-8 text-gray-800">Залишилося до 14:00 (Київ)</h2>
                                 <!-- Таймер -->
-                                <!-- Змінені класи для кращої адаптивності на мобільних пристроях: text-6xl (порівняно з text-7xl) на маленьких екранах -->
+                                <!-- ВИПРАВЛЕНО: Зменшено базовий розмір шрифту з text-6xl на text-5xl -->
                                 <div id="timer-display" 
-                                     class="text-6xl sm:text-7xl md:text-8xl lg:text-9xl font-extrabold text-red-600 transition duration-500" 
+                                     class="text-5xl sm:text-7xl md:text-8xl lg:text-9xl font-extrabold text-red-600 transition duration-500" 
                                      style="font-family: 'Open Sans', Georgia, serif;">
                                     00:00:00
                                 </div>
