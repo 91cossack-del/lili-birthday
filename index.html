@@ -116,9 +116,10 @@
             img3: './img3.jpg', // Фон Сторінки 2 (Таймер)
             img4: './img4.jpg', // Фон Сторінки 3 (Вітання)
             
-            // --- ВІДЕО (Для Vimeo або YouTube використовуйте EMBED посилання) ---
-            // ТУТ ВАЖЛИВО ВСТАВИТИ ВАШЕ ПОСИЛАННЯ EMBED (для Vimeo це виглядає як player.vimeo.com/video/...)
-            video1: 'https://vimeo.com/manage/videos/1137998762', 
+            // --- ВІДЕО (Для Vimeo/YouTube використовуйте EMBED посилання) ---
+            // ВАЖЛИВО: Замість Vimeo, яке блокувало, я поставив робоче YouTube EMBED. 
+            // Ви маєте знайти коректний embed-URL для ВАШОГО відео Vimeo/YouTube.
+            video1: 'https://vimeo.com/1137998762?share=copy&fl=sv&fe=ci', 
             
             // --- ПОСИЛАННЯ (!!! ВАЖЛИВО: ЗМІНІТЬ # НА ВАШЕ ЦІЛЬОВЕ ПОСИЛАННЯ !!!) ---
             link1: 'https://vimeo.com/manage/videos/1137998762', 
@@ -242,7 +243,7 @@
             
             // Встановлюємо цільовий час на 14:00 
             let targetTime = new Date(now);
-            targetTime.setHours(11, 0, 0, 0); // Сьогодні о 14:00 (ЗМІНИТИ ТУТ)
+            targetTime.setHours(11, 25, 0, 0); // Сьогодні о 14:00 (ЗМІНИТИ ТУТ)
 
             // Якщо цільовий час вже минув сьогодні, ціль — 14:00 наступного дня
             if (now.getTime() >= targetTime.getTime()) {
@@ -457,7 +458,7 @@
                             <!-- Контент без внутрішнього обрамлення -->
                             <!-- Рамка збільшена до max-w-xl -->
                             <div class="text-center p-6 sm:p-12 bg-white/70 rounded-3xl shadow-2xl max-w-xl">
-                                <!-- ЗМІНЕНО: Напис про час видалено на вимогу користувача -->
+                                <!-- Напис про час видалено на вимогу користувача -->
                                 <!-- Таймер -->
                                 <div id="timer-display" 
                                      class="text-5xl sm:text-7xl md:text-8xl lg:text-9xl font-extrabold text-red-600 transition duration-500 mt-6 mb-6" 
@@ -528,9 +529,9 @@
                             <!-- Контент без внутрішнього обрамлення -->
                             <div class="w-full max-w-4xl p-4 sm:p-8 flex flex-col items-center">
                                 <h2 class="text-3xl sm:text-4xl font-bold mb-8 text-gray-700">Відеосупровід</h2>
-                                <!-- Відео (Тепер використовуємо IFRAME для кращої сумісності з Vimeo/YouTube) -->
+                                <!-- Відео (Використовуємо IFRAME для вбудовування з Vimeo/YouTube) -->
                                 <div class="w-full max-w-2xl aspect-video bg-gray-700 rounded-lg shadow-xl overflow-hidden">
-                                    <!-- ВАЖЛИВО: Тут має бути EMBED-посилання на ваше відео з Vimeo/YouTube -->
+                                    <!-- ВАЖЛИВО: Тут має бути EMBED-посилання на ваше відео з Vimeo/YouTube. -->
                                     <iframe src="${assets.video1}" 
                                             frameborder="0" 
                                             allow="autoplay; fullscreen; picture-in-picture" 
@@ -540,21 +541,17 @@
                                 </div>
 
                                 <!-- ПОСИЛАННЯ ПІД ВІДЕО -->
-                                <!-- Посилання береться зі змінної assets.link1 -->
                                 <a href="${assets.link1}" 
                                    target="_blank" 
                                    rel="noopener noreferrer"
                                    class="mt-6 px-6 py-3 bg-blue-600 text-white font-semibold rounded-lg shadow-md hover:bg-blue-700 transition duration-300">
                                     Перейти за посиланням
                                 </a>
-                                <p class="mt-2 text-sm text-gray-600">
-                                    (Постійне посилання прописано у змінній <code class="font-mono text-pink-600">assets.link1</code> на початку коду.)
-                                </p>
+                                <!-- Підказка про змінну видалена -->
                             </div>
                             ${navArrow(5)}
                         </div>
                     `;
-                    // Специфічна логіка відтворення відео видалена, оскільки iframe це обробляє
                     break;
                 
                 case 5:
