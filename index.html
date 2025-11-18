@@ -12,21 +12,13 @@
     <!-- Підключення Google Fonts: Cinzel Decorative, Crimson Text, Open Sans, Playfair Display, Roboto -->
     <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@900&family=Crimson+Text:ital,wght@0,400;0,600;0,700;1,400;1,600;1,700;1,900&family=Open+Sans:ital,wght@0,300..800;1,300..800&family=Playfair+Display:ital,wght@0,400..900;1,400..900&family=Roboto:ital,wght@0,100;0,300;0,400;0,500;0,700;0,900;1,100;1,300;1,400;1,500;1,700;1,900&display=swap" rel="stylesheet">
     
-    <!-- Підключення Tone.js для генерації звукового супроводу або завантаження аудіофайлів -->
+    <!-- Підключення Tone.js для завантаження аудіофайлів -->
     <script src="https://unpkg.com/tone@14.9.11/build/Tone.js"></script>
 
     <!-- Налаштування CSS для унікальних ефектів -->
     <style>
         /* Встановлення основних шрифтів */
         body { font-family: 'Open Sans', 'Roboto', sans-serif; }
-
-        /* Стилі для Page 1: Подвійне світло-сіре обрамлення */
-        .page-frame {
-            border: 8px double #D1D5DB; /* light gray (світло-сірий) */
-            box-sizing: border-box;
-            width: 100%;
-            height: 100%;
-        }
 
         /* Стилі для Page 3: Анімація тексту (пульсація) */
         @keyframes pulse-fade {
@@ -102,9 +94,10 @@
         let particleInterval; 
         let animationTimeout; 
         
-        // ЗМІНЕНО: Використовуємо Tone.Player для завантаження зовнішніх аудіофайлів
         let signalPlayer, celebrationPlayer; 
-        let isMusic2Playing = false; // Використовується для контролю зациклення святкового треку
+        let isMusic2Playing = false; 
+        let isSignalPlaying = false; // ЗМІНА: Прапорець для запобігання постійному перезапуску звуку
+        
 
         // =========================================================
         // МАРКЕРИ ДЛЯ АКТИВІВ (ПОСИЛАННЯ НА ЗОБРАЖЕННЯ, ВІДЕО ТА АУДІО)
@@ -112,18 +105,17 @@
         // =========================================================
         const assets = {
             // --- ЗОБРАЖЕННЯ ТА ВІДЕО ---
-            img1: './img1.jpg', // Фон Сторінки 1
-            img2: './img2.jpg', // Центральне зображення Сторінки 1
-            img3: './img3.jpg', // Фон Сторінки 2 (Таймер)
-            img4: './img4.jpg', // Фон Сторінки 3 (Вітання)
-            video1: './video1.mp4', // Відео на Сторінці 4
+            img1: 'https://placehold.co/1920x1080/E0F2F1/14B8A6?text=ФОН-1', // Фон Сторінки 1
+            img2: 'https://placehold.co/200x200/F59E0B/FFFFFF?text=ЗОБРАЖЕННЯ-2', // Центральне зображення Сторінки 1
+            img3: 'https://placehold.co/1920x1080/FCE7F6/EC4899?text=ФОН-2', // Фон Сторінки 2 (Таймер)
+            img4: 'https://placehold.co/1920x1080/D1FAE5/059669?text=ФОН-3', // Фон Сторінки 3 (Вітання)
             
-            // --- АУДІО ТРЕКИ (ПОТРІБНО ЗМІНИТИ) ---
-            // 1. Аудіо для сигналу таймера (Сторінка 2). Повинен бути короткий файл (.mp3, .wav).
-            signalAudio: './music1.mp3', 
-
-            // 2. Аудіо для святкової музики (Сторінка 3). Повинен бути довгий, зациклений трек.
-            celebrationAudio: './music2.mp3', 
+            // ЗМІНА: Використання формату прямого завантаження з Google Drive
+            video1: 'https://drive.google.com/uc?export=download&id={https://drive.google.com/file/d/1HNfPR-QG88B5zwIe2YUCFhJKwy1AfbmJ/view}', 
+            
+            // --- АУДІО ТРЕКИ ---
+            signalAudio: 'ВАШ_URL_ДЛЯ_СИГНАЛЬНОГО_АУДІО.mp3', 
+            celebrationAudio: 'ВАШ_URL_ДЛЯ_СВЯТКОВОЇ_МУЗИКИ.mp3', 
         };
         // =========================================================
 
@@ -134,8 +126,6 @@
         async function initAudio() {
             // Важливо: запускаємо аудіоконтекст лише після взаємодії з користувачем
             await Tone.start(); 
-            
-            // Ініціалізація плеєрів Tone.Player, які завантажують файли з URL:
             
             // 1. Плеєр для Сигналу (короткий звук, не зациклений)
             signalPlayer = new Tone.Player({
@@ -157,9 +147,15 @@
         }
 
         function playMusic1() {
+            // ЗМІНА: Запобігаємо постійному перезапуску. Відтворюємо лише 1 раз.
+            if (isSignalPlaying) return; 
+            
             if (signalPlayer && Tone.context.state === 'running' && signalPlayer.loaded) {
                 // Відтворення короткого звукового файлу з початку
                 signalPlayer.start(Tone.now(), 0); 
+                isSignalPlaying = true; // Встановлюємо прапорець, що сигнал вже пролунав
+            } else if (!signalPlayer.loaded) {
+                console.warn("Попередження: Сигнальний аудіофайл ще не завантажено або URL-адреса недійсна.");
             }
         }
         
@@ -184,6 +180,7 @@
                 celebrationPlayer.dispose();
             }
             isMusic2Playing = false;
+            isSignalPlaying = false; // ЗМІНА: Скидаємо прапорець
             initAudio(); // Ініціалізувати для наступного використання
         }
 
@@ -240,7 +237,7 @@
                 // За 10 секунд до 12:00
                 page2.style.backgroundColor = '#FFFDD0'; // Кремовий фон
                 timerEl.classList.add('timer-blinking');
-                playMusic1(); // Звуковий супровід (тепер ваш аудіофайл)
+                playMusic1(); // ЗМІНА: Тепер викликається лише 1 раз завдяки прапорцю isSignalPlaying
             } else if (totalSeconds <= 0) {
                 // О 12:00 - Перехід на сторінку 3
                 clearInterval(timerInterval);
@@ -250,6 +247,7 @@
                 // Нормальний стан
                 page2.style.backgroundColor = 'transparent';
                 timerEl.classList.remove('timer-blinking');
+                isSignalPlaying = false; // ЗМІНА: Скидаємо прапорець, якщо таймер більше 10 секунд
             }
         }
 
@@ -386,7 +384,10 @@
 
             // Базовий адаптивний стиль для усіх сторінок
             const baseClasses = "flex flex-col items-center justify-center h-full w-full bg-cover bg-center transition-colors duration-500 relative";
-            const frameClass = "page-frame p-4 sm:p-8 flex flex-col items-center justify-center";
+            
+            // Клас для контейнера контенту (прибрано подвійне обрамлення)
+            const frameClass = "p-4 sm:p-8 flex flex-col items-center justify-center rounded-2xl shadow-2xl bg-white/90";
+            
             const navArrow = (targetPage, direction = 'down') => `
                 <button onclick="navigateTo(${targetPage})" 
                         class="touch-target absolute bottom-4 ${direction === 'down' ? 'rotate-0' : 'rotate-180'} bg-gray-600 text-white hover:bg-gray-800 transition duration-300">
@@ -400,7 +401,8 @@
                 case 1:
                     content = `
                         <div id="page-1-content" class="${baseClasses}" style="background-image: url('${assets.img1}')">
-                            <div class="${frameClass} w-11/12 h-11/12 bg-white/90">
+                            <!-- Застосовуємо новий клас без рамки -->
+                            <div class="w-11/12 h-11/12 ${frameClass}"> 
                                 <div class="text-center p-4">
                                     <!-- Напис 1 -->
                                     <h1 style="font-family: 'Cinzel Decorative', serif; color: #3333ff;" 
@@ -427,7 +429,7 @@
                     startTimer(); // Запуск таймера
                     content = `
                         <div id="page-2-content" class="${baseClasses} transition-all duration-1000" style="background-image: url('${assets.img3}')">
-                            <div class="${frameClass} w-11/12 h-11/12 bg-white/90 p-12">
+                            <div class="w-11/12 h-11/12 ${frameClass} p-12">
                                 <h2 class="text-3xl font-bold mb-8 text-gray-800">Залишилося до 12:00 (Київ)</h2>
                                 <!-- Таймер -->
                                 <div id="timer-display" 
@@ -496,11 +498,12 @@
                 case 4:
                     content = `
                         <div id="page-4-content" class="${baseClasses} bg-gray-200">
-                            <div class="${frameClass} w-11/12 h-11/12 bg-white/90 p-4 sm:p-8">
+                            <div class="w-11/12 h-11/12 ${frameClass} p-4 sm:p-8">
                                 <h2 class="text-3xl sm:text-4xl font-bold mb-8 text-gray-700">Відеосупровід</h2>
                                 <!-- Відео -->
                                 <div class="w-full max-w-2xl aspect-video bg-gray-700 rounded-lg shadow-xl overflow-hidden">
                                     <video id="video-player" controls autoplay muted playsinline class="w-full h-full object-cover">
+                                        <!-- ЗМІНА: Використовуємо URL-адресу з Google Drive -->
                                         <source src="${assets.video1}" type="video/mp4">
                                         Ваш браузер не підтримує тег video.
                                     </video>
