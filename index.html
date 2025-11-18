@@ -46,6 +46,11 @@
         .touch-target:hover {
             transform: scale(1.05);
         }
+        
+        /* Утиліта для покращення читабельності тексту на тлі зображень */
+        .text-readable-shadow {
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.7);
+        }
 
         /* === НОВІ СТИЛІ ДЛЯ КОНФЕТІ ТА ПОДАРУНКІВ (СТОРІНКА 3) === */
         @keyframes fall {
@@ -96,7 +101,7 @@
         
         let signalPlayer, celebrationPlayer; 
         let isMusic2Playing = false; 
-        let isSignalPlaying = false; // ЗМІНА: Прапорець для запобігання постійному перезапуску звуку
+        let isSignalPlaying = false; // Прапорець для запобігання постійному перезапуску звуку
         
 
         // =========================================================
@@ -105,17 +110,17 @@
         // =========================================================
         const assets = {
             // --- ЗОБРАЖЕННЯ ТА ВІДЕО ---
-            img1: 'https://placehold.co/1920x1080/E0F2F1/14B8A6?text=ФОН-1', // Фон Сторінки 1
-            img2: 'https://placehold.co/200x200/F59E0B/FFFFFF?text=ЗОБРАЖЕННЯ-2', // Центральне зображення Сторінки 1
-            img3: 'https://placehold.co/1920x1080/FCE7F6/EC4899?text=ФОН-2', // Фон Сторінки 2 (Таймер)
-            img4: 'https://placehold.co/1920x1080/D1FAE5/059669?text=ФОН-3', // Фон Сторінки 3 (Вітання)
+            img1: './img1.jpg', // Фон Сторінки 1
+            img2: './img2.jpg', // Центральне зображення Сторінки 1
+            img3: './img3.jpg', // Фон Сторінки 2 (Таймер)
+            img4: './img4.jpg', // Фон Сторінки 3 (Вітання)
             
-            // ЗМІНА: Використання формату прямого завантаження з Google Drive
+            // Використання формату прямого завантаження з Google Drive
             video1: 'https://drive.google.com/uc?export=download&id={https://drive.google.com/file/d/1HNfPR-QG88B5zwIe2YUCFhJKwy1AfbmJ/view}', 
             
             // --- АУДІО ТРЕКИ ---
-            signalAudio: 'ВАШ_URL_ДЛЯ_СИГНАЛЬНОГО_АУДІО.mp3', 
-            celebrationAudio: 'ВАШ_URL_ДЛЯ_СВЯТКОВОЇ_МУЗИКИ.mp3', 
+            signalAudio: 'music1.mp3', 
+            celebrationAudio: 'music2.mp3', 
         };
         // =========================================================
 
@@ -147,7 +152,7 @@
         }
 
         function playMusic1() {
-            // ЗМІНА: Запобігаємо постійному перезапуску. Відтворюємо лише 1 раз.
+            // Запобігаємо постійному перезапуску. Відтворюємо лише 1 раз.
             if (isSignalPlaying) return; 
             
             if (signalPlayer && Tone.context.state === 'running' && signalPlayer.loaded) {
@@ -180,7 +185,7 @@
                 celebrationPlayer.dispose();
             }
             isMusic2Playing = false;
-            isSignalPlaying = false; // ЗМІНА: Скидаємо прапорець
+            isSignalPlaying = false; // Скидаємо прапорець
             initAudio(); // Ініціалізувати для наступного використання
         }
 
@@ -213,12 +218,12 @@
                 console.error("Помилка отримання часу Києва. Використовується локальний час.", error);
             }
             
-            // Встановлюємо цільовий час на 12:00
+            // Встановлюємо цільовий час на 09:25
             let targetTime = new Date(now);
-            targetTime.setHours(12, 0, 0, 0); // Сьогодні о 12:00
+            targetTime.setHours(9, 25, 0, 0); // Сьогодні о 09:25
 
-            // Якщо вже після 12:00 сьогодні, ціль — 12:00 наступного дня
-            if (kh >= 12) {
+            // Якщо цільовий час вже минув сьогодні, ціль — 09:25 наступного дня
+            if (now.getTime() >= targetTime.getTime()) {
                 targetTime.setDate(targetTime.getDate() + 1);
             }
 
@@ -234,12 +239,12 @@
 
             // Логіка зміни фону, звуку та мигання
             if (totalSeconds <= 10 && totalSeconds > 0) {
-                // За 10 секунд до 12:00
+                // За 10 секунд до 09:25
                 page2.style.backgroundColor = '#FFFDD0'; // Кремовий фон
                 timerEl.classList.add('timer-blinking');
-                playMusic1(); // ЗМІНА: Тепер викликається лише 1 раз завдяки прапорцю isSignalPlaying
+                playMusic1(); // Тепер викликається лише 1 раз завдяки прапорцю isSignalPlaying
             } else if (totalSeconds <= 0) {
-                // О 12:00 - Перехід на сторінку 3
+                // О 09:25 - Перехід на сторінку 3
                 clearInterval(timerInterval);
                 navigateTo(3); // Використовуємо navigateTo для безпечного переходу
                 return;
@@ -247,7 +252,7 @@
                 // Нормальний стан
                 page2.style.backgroundColor = 'transparent';
                 timerEl.classList.remove('timer-blinking');
-                isSignalPlaying = false; // ЗМІНА: Скидаємо прапорець, якщо таймер більше 10 секунд
+                isSignalPlaying = false; // Скидаємо прапорець, якщо таймер більше 10 секунд
             }
         }
 
@@ -385,8 +390,7 @@
             // Базовий адаптивний стиль для усіх сторінок
             const baseClasses = "flex flex-col items-center justify-center h-full w-full bg-cover bg-center transition-colors duration-500 relative";
             
-            // Клас для контейнера контенту (прибрано подвійне обрамлення)
-            const frameClass = "p-4 sm:p-8 flex flex-col items-center justify-center rounded-2xl shadow-2xl bg-white/90";
+            // Клас для контейнера контенту (ВИДАЛЕНО: frameClass)
             
             const navArrow = (targetPage, direction = 'down') => `
                 <button onclick="navigateTo(${targetPage})" 
@@ -401,23 +405,21 @@
                 case 1:
                     content = `
                         <div id="page-1-content" class="${baseClasses}" style="background-image: url('${assets.img1}')">
-                            <!-- Застосовуємо новий клас без рамки -->
-                            <div class="w-11/12 h-11/12 ${frameClass}"> 
-                                <div class="text-center p-4">
-                                    <!-- Напис 1 -->
-                                    <h1 style="font-family: 'Cinzel Decorative', serif; color: #3333ff;" 
-                                        class="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-extrabold mb-2 text-shadow">
-                                        Вас вітає сторінка БАГИНІ
-                                    </h1>
-                                    <!-- Напис 2 -->
-                                    <p style="font-family: 'Crimson Text', 'Helvetica', sans-serif; color: #3333ff;" 
-                                        class="text-lg sm:text-xl md:text-2xl mb-8">
-                                        Вже дуже скоро…
-                                    </p>
-                                    <!-- Зображення-кружок -->
-                                    <div class="w-32 h-32 sm:w-48 sm:h-48 rounded-full overflow-hidden shadow-2xl mx-auto">
-                                        <img src="${assets.img2}" alt="Головне зображення" class="w-full h-full object-cover">
-                                    </div>
+                            <!-- Контент без внутрішнього обрамлення. Використовуємо bg-black/50 для кращої читабельності на мобільних пристроях -->
+                            <div class="text-center p-6 sm:p-8 bg-black/50 rounded-xl max-w-sm md:max-w-md lg:max-w-lg shadow-2xl"> 
+                                <!-- Напис 1 -->
+                                <h1 style="font-family: 'Cinzel Decorative', serif; color: #ffeb3b;" 
+                                    class="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-extrabold mb-4 text-readable-shadow">
+                                    Вас вітає сторінка БАГИНІ
+                                </h1>
+                                <!-- Напис 2 -->
+                                <p style="font-family: 'Crimson Text', 'Helvetica', sans-serif; color: #ffffff;" 
+                                    class="text-lg sm:text-xl md:text-2xl mb-8 text-readable-shadow">
+                                    Вже дуже скоро…
+                                </p>
+                                <!-- Зображення-кружок -->
+                                <div class="w-32 h-32 sm:w-48 sm:h-48 rounded-full overflow-hidden shadow-2xl mx-auto border-4 border-yellow-300">
+                                    <img src="${assets.img2}" alt="Головне зображення" class="w-full h-full object-cover">
                                 </div>
                             </div>
                             ${navArrow(2)}
@@ -429,15 +431,16 @@
                     startTimer(); // Запуск таймера
                     content = `
                         <div id="page-2-content" class="${baseClasses} transition-all duration-1000" style="background-image: url('${assets.img3}')">
-                            <div class="w-11/12 h-11/12 ${frameClass} p-12">
-                                <h2 class="text-3xl font-bold mb-8 text-gray-800">Залишилося до 12:00 (Київ)</h2>
+                            <!-- Контент без внутрішнього обрамлення -->
+                            <div class="text-center p-12 bg-white/70 rounded-3xl shadow-2xl max-w-md">
+                                <h2 class="text-3xl font-bold mb-8 text-gray-800">Залишилося до 09:25 (Київ)</h2>
                                 <!-- Таймер -->
                                 <div id="timer-display" 
                                      class="text-7xl sm:text-8xl md:text-9xl font-extrabold text-red-600 transition duration-500" 
                                      style="font-family: 'Open Sans', Georgia, serif;">
                                     00:00:00
                                 </div>
-                                <p class="mt-4 text-gray-500">За 10 секунд до кінця фон зміниться, а таймер почне мигати.</p>
+                                <p class="mt-4 text-gray-700 font-medium">За 10 секунд до кінця фон зміниться, а таймер почне мигати.</p>
                             </div>
                         </div>
                     `;
@@ -498,12 +501,13 @@
                 case 4:
                     content = `
                         <div id="page-4-content" class="${baseClasses} bg-gray-200">
-                            <div class="w-11/12 h-11/12 ${frameClass} p-4 sm:p-8">
+                            <!-- Контент без внутрішнього обрамлення -->
+                            <div class="w-full max-w-4xl p-4 sm:p-8 flex flex-col items-center">
                                 <h2 class="text-3xl sm:text-4xl font-bold mb-8 text-gray-700">Відеосупровід</h2>
                                 <!-- Відео -->
                                 <div class="w-full max-w-2xl aspect-video bg-gray-700 rounded-lg shadow-xl overflow-hidden">
                                     <video id="video-player" controls autoplay muted playsinline class="w-full h-full object-cover">
-                                        <!-- ЗМІНА: Використовуємо URL-адресу з Google Drive -->
+                                        <!-- Використовуємо URL-адресу з Google Drive -->
                                         <source src="${assets.video1}" type="video/mp4">
                                         Ваш браузер не підтримує тег video.
                                     </video>
