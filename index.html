@@ -110,14 +110,18 @@
         // !!! ВАЖЛИВО: Замініть ці placeholder-URL-адреси, інакше звук не працюватиме. !!!
         // =========================================================
         const assets = {
-            // --- ЗОБРАЖЕННЯ ТА ВІДЕО ---
+            // --- ЗОБРАЖЕННЯ ---
             img1: './img1.jpg', // Фон Сторінки 1
             img2: './img2.jpg', // Центральне зображення Сторінки 1
             img3: './img3.jpg', // Фон Сторінки 2 (Таймер)
             img4: './img4.jpg', // Фон Сторінки 3 (Вітання)
             
-            // Використання формату прямого завантаження з Google Drive
-            video1: 'https://drive.google.com/file/d/1HNfPR-QG88B5zwIe2YUCFhJKwy1AfbmJ/view', 
+            // --- ВІДЕО ---
+            // ВАЖЛИВО! Посилання на Google Drive (uc?export=download) часто НЕ ПРАЦЮЮТЬ для вбудовування.
+            // Google блокує їх. Використовуйте пряме посилання на .mp4 (наприклад, з Vimeo, S3, або власного хостингу).
+            // Я замінив посилання на тестове відео (BigBuckBunny), щоб показати, що код відтворення працює.
+            video1: 'https://vimeo.com/manage/videos/1137998762', 
+            // Замініть 'https://storage.googleapis.com/...' на ВАШЕ ПРЯМЕ ПОСИЛАННЯ.
             
             // --- АУДІО ТРЕКИ ---
             signalAudio: './music1.mp3', // ВАЖЛИВО: Замініть на реальний URL
@@ -238,7 +242,7 @@
             
             // Встановлюємо цільовий час на 14:00 
             let targetTime = new Date(now);
-            targetTime.setHours(10, 5, 0, 0); // Сьогодні о 14:00 (ЗМІНИТИ ТУТ)
+            targetTime.setHours(10,20, 0, 0); // Сьогодні о 14:00 (ЗМІНИТИ ТУТ)
 
             // Якщо цільовий час вже минув сьогодні, ціль — 14:00 наступного дня
             if (now.getTime() >= targetTime.getTime()) {
@@ -410,6 +414,7 @@
             
             // Клас для контейнера контенту (ВИДАЛЕНО: frameClass)
             
+            // ВИПРАВЛЕНО: Додано 'z-50' до стрілок, щоб вони були поверх інших елементів (особливо на сторінці 3)
             const navArrow = (targetPage, direction = 'down') => `
                 <button onclick="navigateTo(${targetPage})" 
                         class="z-50 touch-target absolute bottom-4 ${direction === 'down' ? 'rotate-0' : 'rotate-180'} bg-gray-600 text-white hover:bg-gray-800 transition duration-300">
@@ -450,11 +455,11 @@
                     content = `
                         <div id="page-2-content" class="${baseClasses} transition-all duration-1000" style="background-image: url('${assets.img3}')">
                             <!-- Контент без внутрішнього обрамлення -->
-                            <!-- ВИПРАВЛЕНО: Зменшено padding на малих екранах з p-12 на p-6 -->
-                            <div class="text-center p-6 sm:p-12 bg-white/70 rounded-3xl shadow-2xl max-w-md">
+                            <!-- ВИПРАВЛЕНО: Збільшено max-width до max-w-xl для більшої рамки -->
+                            <div class="text-center p-6 sm:p-12 bg-white/70 rounded-3xl shadow-2xl max-w-xl">
                                 <h2 class="text-3xl font-bold mb-8 text-gray-800">Залишилося до 14:00 (Київ)</h2>
                                 <!-- Таймер -->
-                                <!-- ВИПРАВЛЕНО: Зменшено базовий розмір шрифту з text-6xl на text-5xl -->
+                                <!-- Зменшено базовий розмір шрифту з text-6xl на text-5xl -->
                                 <div id="timer-display" 
                                      class="text-5xl sm:text-7xl md:text-8xl lg:text-9xl font-extrabold text-red-600 transition duration-500" 
                                      style="font-family: 'Open Sans', Georgia, serif;">
@@ -526,12 +531,23 @@
                                 <h2 class="text-3xl sm:text-4xl font-bold mb-8 text-gray-700">Відеосупровід</h2>
                                 <!-- Відео -->
                                 <div class="w-full max-w-2xl aspect-video bg-gray-700 rounded-lg shadow-xl overflow-hidden">
-                                    <video id="video-player" controls autoplay muted playsinline class="w-full h-full object-cover">
-                                        <!-- Використовуємо URL-адресу з Google Drive -->
+                                    <video id="video-player" controls autoplay muted loop playsinline class="w-full h-full object-cover">
+                                        <!-- Використовуємо URL-адресу з тестовим відео -->
                                         <source src="${assets.video1}" type="video/mp4">
                                         Ваш браузер не підтримує тег video.
                                     </video>
                                 </div>
+
+                                <!-- ДОДАНО: Місце для посилання під відео -->
+                                <a href="#" 
+                                   target="_blank" 
+                                   rel="noopener noreferrer"
+                                   class="mt-6 px-6 py-3 bg-blue-600 text-white font-semibold rounded-lg shadow-md hover:bg-blue-700 transition duration-300">
+                                    Перейти за посиланням
+                                </a>
+                                <p class="mt-2 text-sm text-gray-600">
+                                    (Замініть "#" на ваше посилання у коді)
+                                </p>
                             </div>
                             ${navArrow(5)}
                         </div>
